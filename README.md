@@ -5,7 +5,7 @@ policies and shows you which team paid for each one.**
 
 This app consumes [**device-farm-scheduler-kit**](https://github.com/rajatslakhina/device-farm-scheduler-kit)
 as a remote Swift package. There is no copy of the library in this repository —
-`Demo.xcodeproj` resolves it from GitHub, constrained to the `1.x` line.
+`Demo.xcodeproj` resolves it from GitHub, constrained to the `2.x` line.
 
 ---
 
