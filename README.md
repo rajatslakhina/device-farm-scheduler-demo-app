@@ -47,11 +47,18 @@ A 91% hit rate, and the smallest tenant got two runs in thirty minutes. Warmth i
 policy `payments` runs 15 times instead of 2, and the tenant left holding the backlog is
 `checkout` — the biggest one, which is the correct place for a backlog to land.
 
-There is also an admission banner, and on this fleet it reports a **miss**. `AdmissionController`
-quotes every caller a 300-second wait budget at submit time; the layered policy's worst-served
-tenant waited 752. Six hosts is not enough for this workload under any policy, and a console that
-only showed the winning policy's best column would not have told you that. An estimate nobody
-checks against an outcome is not a service level.
+There is also an admission banner, and on this fleet it reports a **miss**: `AdmissionController`
+is configured with a 300-second wait budget, and the layered policy's worst-served tenant waited
+752. Six hosts is not enough for this workload under any policy, and a console that only showed
+the winning policy's best column would not have told you that.
+
+The banner says plainly what it is comparing, because the distinction matters: **this replay does
+not apply admission control.** `FarmSimulation` enqueues every arrival unconditionally, so what
+you see is the *unclipped* cost measured against the budget the farm would have quoted — not a
+report that admission control ran and held. Under strict fairness `checkout`'s backlog reaches
+119, well past the same policy's 96-job per-tenant cap, which is the same fact from the other
+direction. Admitting everything is the right choice for comparing placement policies (clipping
+the queue would hide the differences) and the wrong thing to quietly call a service level.
 
 The third panel sizes the warm pool against the observed arrival histogram, bucketed into
 30-second observation windows. The curve `[10040, 7820, 5600, 3700, 2240, 1420, 1080]` falls
@@ -111,15 +118,16 @@ conflating them is the easy lie here.
   compiles against the resolved library for an iOS Simulator destination.
 
 **Checked in the library's repository:** a clean `swift build -Xswiftc -warnings-as-errors` with
-0 warnings, `swift test` with 97 tests and 0 failures, a grep enforcing that no `await` appears in
+0 warnings, `swift test` with 98 tests and 0 failures, a grep enforcing that no suspension point appears in
 the scheduler core, and a macOS job compiling the SwiftUI module for iOS Simulator.
 
 **Not verified: the app has never been launched.** Nobody has seen it render. Every number in the
 tables above comes from replaying this app's exact `WorkloadSpec` through `FarmSimulation` under
 Swift 6.0.3 — the same deterministic, seeded code path the console calls on appear — and they are
-pinned by `testDemoAppSixHostNumbersArePinned` in the library's test suite, so they cannot drift
-without CI failing there. That is an inference from a shared code path plus a regression test, not
-an observation of the running app, and it is worth exactly that much.
+pinned cell by cell — every column of all three rows, the whole per-tenant table, and the
+wait-budget miss — by `testDemoAppSixHostNumbersArePinned` in the library's test suite, so they
+cannot drift without CI failing there. That is an inference from a shared code path plus a
+regression test, not an observation of the running app, and it is worth exactly that much.
 
 ## How to run it
 
