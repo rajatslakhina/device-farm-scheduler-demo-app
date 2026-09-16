@@ -60,7 +60,7 @@ report that admission control ran and held. Under strict fairness `checkout`'s b
 direction. Admitting everything is the right choice for comparing placement policies (clipping
 the queue would hide the differences) and the wrong thing to quietly call a service level.
 
-The third panel sizes the warm pool against the observed arrival histogram, bucketed into
+The last panel sizes the warm pool against the observed arrival histogram, bucketed into
 30-second observation windows. The curve `[10040, 7820, 5600, 3700, 2240, 1420, 1080]` falls
 monotonically, so it recommends holding the full burst — the answer you would have guessed,
 arrived at by evaluating the real cost at every depth rather than assuming it. Make idle hosts
@@ -118,16 +118,24 @@ conflating them is the easy lie here.
   compiles against the resolved library for an iOS Simulator destination.
 
 **Checked in the library's repository:** a clean `swift build -Xswiftc -warnings-as-errors` with
-0 warnings, `swift test` with 98 tests and 0 failures, a grep enforcing that no suspension point appears in
+0 warnings, `swift test` with 99 tests and 0 failures, a grep enforcing that no suspension point appears in
 the scheduler core, and a macOS job compiling the SwiftUI module for iOS Simulator.
 
 **Not verified: the app has never been launched.** Nobody has seen it render. Every number in the
 tables above comes from replaying this app's exact `WorkloadSpec` through `FarmSimulation` under
 Swift 6.0.3 — the same deterministic, seeded code path the console calls on appear — and they are
 pinned cell by cell — every column of all three rows, the whole per-tenant table, and the
-wait-budget miss — by `testDemoAppSixHostNumbersArePinned` in the library's test suite, so they
-cannot drift without CI failing there. That is an inference from a shared code path plus a
-regression test, not an observation of the running app, and it is worth exactly that much.
+wait-budget miss — by `testDemoAppSixHostNumbersArePinned` in the library's test suite.
+
+The precise scope of that protection, since it is easy to overstate: the test rebuilds a
+six-host variant of the reference spec *in the library's repo*, because the two repositories
+cannot import each other. It is byte-for-byte the spec this app constructs today, so the figures
+are right. But if someone changed `DemoWorkload.hostCount` here to 5, nothing would fail —
+the demo's CI only compiles. The pin protects against the *library* drifting under the app, not
+against the app drifting away from the library.
+
+So: an inference from a shared code path plus a one-directional regression test, not an
+observation of a running app. Worth exactly that much.
 
 ## How to run it
 
